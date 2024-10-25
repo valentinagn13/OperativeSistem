@@ -2,17 +2,18 @@ import customtkinter as ctk
 from PIL import Image  # Necesario para manejar las imágenes
 import time
 from calculator import Calculator  # Importa la clase Calculator
-from file_system import File  # Importa la clase Calculator
+from file_system import File  # Importa la clase File
 
 from notepad import Notepad  # Importa el bloc de notas
 from tareas import TaskManager  # Importa el administrador de tareas
+
 class DeskPage(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         # Configuración de la ventana principal del escritorio
         self.title("Desk")
-        self.geometry("800x600")  # Puedes ajustar el tamaño si lo deseas
+        self.geometry("1200x900")  # Puedes ajustar el tamaño si lo deseas
         self.state('zoomed')  # Pantalla completa
 
         # Inicializar el administrador de tareas
@@ -36,13 +37,23 @@ class DeskPage(ctk.CTk):
         self.clock_label = ctk.CTkLabel(self.taskbar, text="", font=("Arial", 12))
         self.clock_label.pack(side="right", padx=10)
         self.update_clock()
-        
-    def on_task_manager_click(self):
-            print("Hiciste clic en el Administrador de Tareas")
-            # Aquí puedes crear y mostrar la ventana del administrador de tareas
-            # Por ejemplo:
-            self.task_manager.mainloop()  # Asegúrate de que TaskManager tenga un método show()
 
+        # Mantener DeskPage siempre al fondo
+        self.lower()
+
+        # Vincular eventos para que DeskPage siempre se mantenga detrás
+        self.bind("<FocusIn>", self.keep_desk_in_background)
+
+    def keep_desk_in_background(self, event=None):
+        """
+        Envía la ventana DeskPage al fondo cada vez que recibe foco.
+        """
+        self.lower()  # Mantener la ventana de Desk en el fondo siempre
+
+    def on_task_manager_click(self):
+        print("Hiciste clic en el Administrador de Tareas")
+        self.lower()  # Mantener DeskPage al fondo
+        self.task_manager.mainloop()  # Mostrar la ventana del administrador de tareas
 
     def add_taskbar_icon(self, image_path, tooltip_text, command):
         image = ctk.CTkImage(light_image=Image.open(image_path), size=(30, 30))
@@ -51,13 +62,15 @@ class DeskPage(ctk.CTk):
 
     def on_calculator_click(self):
         print("Hiciste clic en la Calculadora")
-        calc = Calculator(self.on_calculator_close)  # Aquí se pasa el callback
+        self.lower()  # Mantener DeskPage al fondo
+        calc = Calculator(self.on_calculator_close)
         self.task_manager.add_task("Calculadora")
         calc.protocol("WM_DELETE_WINDOW", lambda: self.on_window_close(calc, "Calculadora"))
         calc.mainloop()
 
     def on_notepad_click(self):
         print("Hiciste clic en el Bloc de Notas")
+        self.lower()  # Mantener DeskPage al fondo
         notepad = Notepad(self.on_notepad_close)
         self.task_manager.add_task("Bloc de Notas")
         notepad.protocol("WM_DELETE_WINDOW", lambda: self.on_window_close(notepad, "Bloc de Notas"))
@@ -65,12 +78,11 @@ class DeskPage(ctk.CTk):
 
     def on_file_click(self):
         print("Hiciste clic en file")
+        self.lower()  # Mantener DeskPage al fondo
         file = File(self.on_file_close)
         self.task_manager.add_task("File system")
-        file.protocol("WM_DELETE_WINDOW", lambda: self.on_window_close(file, "Bloc de Notas"))
+        file.protocol("WM_DELETE_WINDOW", lambda: self.on_window_close(file, "File system"))
         file.mainloop()
-
-
 
     def on_window_close(self, window, task_name):
         print(f"Cerrando {task_name}")
@@ -81,10 +93,10 @@ class DeskPage(ctk.CTk):
         print("La calculadora ha sido cerrada.")
         
     def on_notepad_close(self):
-        print("La calculadora ha sido cerrada.")
+        print("El Bloc de Notas ha sido cerrado.")
         
     def on_file_close(self):
-        print("La calculadora ha sido cerrada.")
+        print("El sistema de archivos ha sido cerrado.")
         
     def update_clock(self):
         current_time = time.strftime("%H:%M:%S")
